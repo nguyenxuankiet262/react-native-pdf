@@ -123,7 +123,7 @@ const float MIN_SCALE = 1.0f;
                 //Release old doc
                 _pdfDocument = Nil;
             }
-            
+
             if ([_path hasPrefix:@"blob:"]) {
                 RCTBlobManager *blobManager = [_bridge moduleForName:@"BlobModule"];
                 NSURL *blobURL = [NSURL URLWithString:_path];
@@ -297,9 +297,11 @@ const float MIN_SCALE = 1.0f;
 
 - (void)reactSetFrame:(CGRect)frame
 {
+    PDFPage *page = [_pdfView pageForPoint:CGPointZero nearest:YES];
+    CGRect savedRect = [_pdfView convertRect:_pdfView.bounds toPage:page];
+    NSInteger savedIndex = [_pdfView.document indexForPage:page];
     [super reactSetFrame:frame];
     _pdfView.frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
-
     NSMutableArray *mProps = [_changedProps mutableCopy];
     if (_initialed) {
         [mProps removeObject:@"path"];
@@ -307,6 +309,8 @@ const float MIN_SCALE = 1.0f;
     _initialed = YES;
 
     [self didSetProps:mProps];
+    PDFPage *oldPage = [_pdfView.document pageAtIndex:savedIndex];
+    [_pdfView goToRect:savedRect onPage:oldPage];
 }
 
 - (void)dealloc{
